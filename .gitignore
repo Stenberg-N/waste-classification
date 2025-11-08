@@ -1,0 +1,9 @@
+venv/
+__pycache__
+__MACOSX/
+dataset-original
+dataset-original.zip
+*.jpg
+*.png
+events.out.tfevents.*
+*.pth
