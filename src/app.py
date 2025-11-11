@@ -1,8 +1,8 @@
 import sys, os
 from src.evaluate import predict_image
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton, QGridLayout, QMenuBar, QSpacerItem, QFileDialog, QMessageBox
-from PyQt6.QtCore import Qt, QSize, QMimeData
-from PyQt6.QtGui import QPixmap, QColor, QPainter, QBrush, QDrag
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QPixmap, QColor, QPainter, QBrush, QAction
 
 class WasteClassifierApp(QMainWindow):
     def __init__(self):
@@ -33,10 +33,31 @@ class WasteClassifierApp(QMainWindow):
         self.setCentralWidget(self.widgetCentral)
         self.widgetCentral.setLayout(self.layout)
 
-        self.barMenu = QMenuBar()
+        self.barMenu = self.menuBar()
         self.barMenu.setStyleSheet("border: 1px solid white;")
         self.barMenu.setFixedHeight(30)
         self.layout.addWidget(self.barMenu)
+
+        self.fileMenuBar = QMenuBar()
+        self.fileMenu = self.fileMenuBar.addMenu("File")
+        self.barMenu.setCornerWidget(self.fileMenuBar, Qt.Corner.TopLeftCorner)
+
+        self.actionUpload = QAction("Upload image")
+        self.actionClear = QAction("Clear image")
+        self.actionClassify = QAction("Classify image")
+        self.actionClassify.setEnabled(False)
+        self.actionExit = QAction("Exit")
+
+        self.actionUpload.triggered.connect(self.uploadImage)
+        self.actionClear.triggered.connect(self.clearImage)
+        self.actionClassify.triggered.connect(self.classifyImage)
+        self.actionExit.triggered.connect(self.close)
+
+        self.fileMenu.addAction(self.actionUpload)
+        self.fileMenu.addAction(self.actionClear)
+        self.fileMenu.addAction(self.actionClassify)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.actionExit)
 
         self.containerMainLayout = QVBoxLayout()
         self.containerMainLayout.setContentsMargins(80, 80, 80, 80)
@@ -162,6 +183,7 @@ class WasteClassifierApp(QMainWindow):
             pixmap = QPixmap(filename)
             rounded_pixmap = self.makeRoundedPixmap(pixmap)
             self.labelImage.setPixmap(rounded_pixmap)
+            self.checkImageUpload()
 
     def classifyImage(self):
         if not self.image_path:
@@ -180,6 +202,13 @@ class WasteClassifierApp(QMainWindow):
         self.labelResults.setText("Prediction: ")
         self.labelConfidence.setText("Confidence: ")
         self.labelFile.setText("Uploaded image: ")
+        self.checkImageUpload()
+
+    def checkImageUpload(self):
+        if self.image_path is not None:
+            self.actionClassify.setEnabled(True)
+        else:
+            self.actionClassify.setEnabled(False)
 
 class SquareLabel(QLabel):
     def __init__(self, text=""):
