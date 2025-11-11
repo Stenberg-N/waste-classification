@@ -1,6 +1,7 @@
-import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton, QGridLayout, QMenuBar, QSpacerItem
+import sys, os
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton, QGridLayout, QMenuBar, QSpacerItem, QFileDialog
 from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QPixmap, QColor, QPainter, QBrush
 
 class WasteClassifierApp(QMainWindow):
     def __init__(self):
@@ -62,6 +63,26 @@ class WasteClassifierApp(QMainWindow):
         self.containerImageLayout.addWidget(self.labelImage)
         self.containerImageLayout.addStretch()
         self.labelImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.labelImage.setScaledContents(True)
+        self.labelImage.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+        self.containerFileResultsLayout = QVBoxLayout()
+        self.containerFileResultsLayout.setContentsMargins(10, 10, 10, 10)
+        self.containerFileResults = QWidget()
+        self.containerImageButtonsLayout.addWidget(self.containerFileResults)
+        self.containerFileResults.setStyleSheet("border: 1px solid cyan;")
+        self.containerFileResults.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.containerFileResults.setLayout(self.containerFileResultsLayout)
+
+        self.labelResults = QLabel("Result: ")
+        self.containerFileResultsLayout.addWidget(self.labelResults)
+        self.labelResults.setStyleSheet("border: 1px solid green;")
+        self.labelResults.setMaximumHeight(30)
+
+        self.labelFile = QLabel("Uploaded image: ")
+        self.containerFileResultsLayout.addWidget(self.labelFile)
+        self.labelFile.setStyleSheet("border: 1px solid green;")
+        self.labelFile.setMaximumHeight(30)
 
         self.spacer = QSpacerItem(1, 1, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.containerImageButtonsLayout.addItem(self.spacer)
@@ -87,15 +108,41 @@ class WasteClassifierApp(QMainWindow):
         self.containerImageButtonsLayout.addWidget(self.containerButtons)
         self.containerButtons.setStyleSheet("border: 1px solid white;")
         self.containerButtons.setMinimumHeight(150)
-        self.containerButtons.setMaximumHeight(200)
-        self.containerButtons.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.containerButtons.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.containerButtons.setLayout(self.containerButtonsLayout)
+
+        self.buttonUpload.clicked.connect(self.uploadImage)
+        self.buttonClassify.clicked.connect
+        self.buttonClear.clicked.connect
+
+    def makeRoundedPixmap(self, pixmap, radius=10):
+        scaled = pixmap.scaled(500, 500, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        rounded = QPixmap(scaled.size())
+        rounded.fill(QColor("transparent"))
+        painter = QPainter(rounded)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setBrush(QBrush(scaled))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRoundedRect(scaled.rect(), radius, radius)
+        painter.end()
+        return rounded
+
+    def uploadImage(self):
+        filename, _ = QFileDialog.getOpenFileName(
+            self, "Open Image", "", "Image Files (*.png *.jpg *.jpeg)"
+        )
+        if filename:
+            self.image_path = filename
+            self.labelFile.setText(f"Uploaded Image: {os.path.basename(filename)}")
+            pixmap = QPixmap(filename)
+            rounded_pixmap = self.makeRoundedPixmap(pixmap)
+            self.labelImage.setPixmap(rounded_pixmap)
 
 class SquareLabel(QLabel):
     def __init__(self, text=""):
         super().__init__(text)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setStyleSheet("border-radius: 10px; border: 1px solid white")
+        self.setStyleSheet("border: transparent;")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setMinimumSize(100, 100)
         self.setMaximumSize(500, 500)
