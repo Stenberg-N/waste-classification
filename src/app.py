@@ -1,13 +1,15 @@
 import sys, os
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton, QGridLayout, QMenuBar, QSpacerItem, QFileDialog
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QPixmap, QColor, QPainter, QBrush
+from src.evaluate import predict_image
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton, QGridLayout, QMenuBar, QSpacerItem, QFileDialog, QMessageBox
+from PyQt6.QtCore import Qt, QSize, QMimeData
+from PyQt6.QtGui import QPixmap, QColor, QPainter, QBrush, QDrag
 
 class WasteClassifierApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Waste Classifier")
         self.resize(900, 1000)
+        self.image_path = None
 
         self.setStyleSheet("""
             QLabel {
@@ -59,11 +61,12 @@ class WasteClassifierApp(QMainWindow):
         self.containerImage.setStyleSheet("border: 1px solid red;")
         self.containerImage.setLayout(self.containerImageLayout)
 
-        self.labelImage = SquareLabel("No image uploaded")
+        self.labelImage = SquareLabel("No image uploaded \n\n Drag and drop an image here \n\n")
         self.containerImageLayout.addWidget(self.labelImage)
         self.containerImageLayout.addStretch()
         self.labelImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.labelImage.setScaledContents(True)
+        self.labelImage.setAcceptDrops(True)
         self.labelImage.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.containerFileResultsLayout = QVBoxLayout()
@@ -74,10 +77,15 @@ class WasteClassifierApp(QMainWindow):
         self.containerFileResults.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.containerFileResults.setLayout(self.containerFileResultsLayout)
 
-        self.labelResults = QLabel("Result: ")
+        self.labelResults = QLabel("Prediction: ")
         self.containerFileResultsLayout.addWidget(self.labelResults)
         self.labelResults.setStyleSheet("border: 1px solid green;")
         self.labelResults.setMaximumHeight(30)
+
+        self.labelConfidence = QLabel("Confidence: ")
+        self.containerFileResultsLayout.addWidget(self.labelConfidence)
+        self.labelConfidence.setStyleSheet("border: 1px solid green;")
+        self.labelConfidence.setMaximumHeight(30)
 
         self.labelFile = QLabel("Uploaded image: ")
         self.containerFileResultsLayout.addWidget(self.labelFile)
@@ -112,8 +120,8 @@ class WasteClassifierApp(QMainWindow):
         self.containerButtons.setLayout(self.containerButtonsLayout)
 
         self.buttonUpload.clicked.connect(self.uploadImage)
-        self.buttonClassify.clicked.connect
-        self.buttonClear.clicked.connect
+        self.buttonClassify.clicked.connect(self.classifyImage)
+        self.buttonClear.clicked.connect(self.clearImage)
 
     def makeRoundedPixmap(self, pixmap, radius=10):
         scaled = pixmap.scaled(500, 500, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
@@ -127,9 +135,26 @@ class WasteClassifierApp(QMainWindow):
         painter.end()
         return rounded
 
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        url = event.mimeData().urls()[0]
+        image_path = url.toLocalFile()
+        if image_path.lower().endswith(('.png', '.jpg')):
+            pixmap = QPixmap(url.toLocalFile())
+            rounded_pixmap = self.makeRoundedPixmap(pixmap)
+            self.labelImage.setPixmap(rounded_pixmap)
+            self.labelFile.setText(f"Uploaded image: {url.fileName()}")
+            self.image_path = image_path
+        else:
+            msg = QMessageBox(QMessageBox.Icon.Warning, "Invalid File", "Please drop an image file (.png, .jpg)", parent=self)
+            msg.exec()
+
     def uploadImage(self):
         filename, _ = QFileDialog.getOpenFileName(
-            self, "Open Image", "", "Image Files (*.png *.jpg *.jpeg)"
+            self, "Open Image", "", "Image Files (*.png *.jpg)"
         )
         if filename:
             self.image_path = filename
@@ -137,6 +162,24 @@ class WasteClassifierApp(QMainWindow):
             pixmap = QPixmap(filename)
             rounded_pixmap = self.makeRoundedPixmap(pixmap)
             self.labelImage.setPixmap(rounded_pixmap)
+
+    def classifyImage(self):
+        if not self.image_path:
+            msg = QMessageBox(QMessageBox.Icon.Critical, "Error", "Please upload an image!", parent=self)
+            msg.exec()
+            return
+
+        predicted_class, confidence = predict_image(self.image_path)
+        self.labelResults.setText(f"Prediction: {predicted_class}")
+        self.labelConfidence.setText(f"Confidence: {confidence * 100:.2f}% sure")
+
+    def clearImage(self):
+        self.image_path = None
+        self.labelImage.clear()
+        self.labelImage.setText("No image uploaded \n\n Drag and drop an image here \n\n")
+        self.labelResults.setText("Prediction: ")
+        self.labelConfidence.setText("Confidence: ")
+        self.labelFile.setText("Uploaded image: ")
 
 class SquareLabel(QLabel):
     def __init__(self, text=""):
