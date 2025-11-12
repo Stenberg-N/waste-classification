@@ -1,7 +1,7 @@
 import sys, os
 from src.evaluate import predict_image
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton, QGridLayout, QMenuBar, QSpacerItem, QFileDialog, QMessageBox, QDialog
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtCore import Qt, QSize, QSettings
 from PyQt6.QtGui import QPixmap, QColor, QPainter, QBrush, QAction
 
 class WasteClassifierApp(QMainWindow):
@@ -10,22 +10,8 @@ class WasteClassifierApp(QMainWindow):
         self.setWindowTitle("Waste Classifier")
         self.resize(900, 1000)
         self.image_path = None
-
-        self.setStyleSheet("""
-            QLabel {
-                font-size: 16px;
-                color: #fafafa;
-            }
-            QWidget {
-                background-color: #151515;
-            }
-            QPushButton {
-                font-size: 16px;
-                color: #fafafa;
-                border-radius: 6px;
-                border: 1px solid white;
-            }
-        """)
+        self.settings = QSettings("Stenberg-N", "WasteClassifierApp")
+        self.currentTheme = self.settings.value("theme", "light")
 
         self.layout = QVBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -34,7 +20,6 @@ class WasteClassifierApp(QMainWindow):
         self.widgetCentral.setLayout(self.layout)
 
         self.barMenu = self.menuBar()
-        self.barMenu.setStyleSheet("border: 1px solid white;")
         self.barMenu.setFixedHeight(30)
 
         self.containerBarMenuOptionsLayout = QHBoxLayout()
@@ -52,6 +37,13 @@ class WasteClassifierApp(QMainWindow):
         self.containerBarMenuOptionsLayout.addWidget(self.fileMenuBar)
         self.containerBarMenuOptionsLayout.addWidget(self.helpMenuBar)
         self.barMenu.setCornerWidget(self.containerBarMenuOptions, Qt.Corner.TopLeftCorner)
+
+        self.buttonToggleTheme = HoverButton("Dark Theme" if self.currentTheme == "light" else "Light Theme")
+        self.buttonToggleTheme.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.buttonToggleTheme.setMaximumWidth(150)
+        self.buttonToggleTheme.setCheckable(True)
+        self.buttonToggleTheme.clicked.connect(self.toggleTheme)
+        self.barMenu.setCornerWidget(self.buttonToggleTheme, Qt.Corner.TopRightCorner)
 
         self.actionUpload = QAction("Upload image")
         self.actionClear = QAction("Clear image")
@@ -76,17 +68,18 @@ class WasteClassifierApp(QMainWindow):
 
         self.containerMainLayout = QVBoxLayout()
         self.containerMainLayout.setContentsMargins(80, 80, 80, 80)
+        self.containerMainLayout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.containerMain = QWidget()
         self.layout.addWidget(self.containerMain)
-        self.containerMain.setStyleSheet("border: 1px solid red;")
         self.containerMain.setLayout(self.containerMainLayout)
 
         self.containerImageButtonsLayout = QVBoxLayout()
-        self.containerImageButtonsLayout.setContentsMargins(20, 20, 20, 20)
+        self.containerImageButtonsLayout.setContentsMargins(40, 40, 40, 40)
         self.containerImageButtonsLayout.setSpacing(0)
         self.containerImageButtons = QWidget()
         self.containerMainLayout.addWidget(self.containerImageButtons)
         self.containerImageButtons.setStyleSheet("border: 1px solid white;")
+        self.containerImageButtons.setMaximumWidth(1000)
         self.containerImageButtons.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.containerImageButtons.setLayout(self.containerImageButtonsLayout)
 
@@ -152,12 +145,79 @@ class WasteClassifierApp(QMainWindow):
         self.containerImageButtonsLayout.addWidget(self.containerButtons)
         self.containerButtons.setStyleSheet("border: 1px solid white;")
         self.containerButtons.setMinimumHeight(150)
-        self.containerButtons.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.containerButtons.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.containerButtons.setLayout(self.containerButtonsLayout)
 
         self.buttonUpload.clicked.connect(self.uploadImage)
         self.buttonClassify.clicked.connect(self.classifyImage)
         self.buttonClear.clicked.connect(self.clearImage)
+
+
+        # STYLING
+
+        self.lightTheme = """
+            QLabel {
+                font-size: 16px;
+                color: black;
+            }
+            QWidget {
+                background-color: rgb(240, 240, 240);
+                font-size: 16px;
+            }
+            QPushButton {
+                font-size: 16px;
+                color: black;
+                border-radius: 6px;
+                border: 1px solid white;
+            }
+        """
+
+        self.darkTheme = """
+            QLabel {
+                font-size: 16px;
+                color: #fafafa;
+            }
+            QWidget {
+                background-color: rgb(20, 20, 20);
+                font-size: 16px;
+            }
+            QPushButton {
+                font-size: 16px;
+                color: #fafafa;
+                border-radius: 6px;
+                border: 1px solid white;
+            }
+        """
+
+        self.buttonClassify.setStyleSheet("""
+            QPushButton {
+                background-color: #69ff46;
+                border: 3px solid #43a62d;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #52cc37;
+            }
+        """)
+
+        self.barMenu.setStyleSheet("""
+            color: #fafafa;
+            font-size: 16px;
+            border: none;
+            background-color: rgb(20, 20, 20);
+            padding: 0 20px 0 0;
+        """)
+
+        self.containerMain.setStyleSheet("""
+            border-top: 2px solid #69ff46;
+        """)
+
+        self.containerBarMenuOptions.setStyleSheet("""
+            color: #fafafa;
+            background-color: rgb(20, 20, 20);
+        """)
+
+        self.applyTheme(self.currentTheme)
 
     def makeRoundedPixmap(self, pixmap, radius=10):
         scaled = pixmap.scaled(500, 500, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
@@ -259,6 +319,19 @@ class WasteClassifierApp(QMainWindow):
         self.dialog.setLayout(self.dialogLayout)
 
         self.dialog.exec()
+
+    def applyTheme(self, theme):
+        if theme == "dark":
+            QApplication.instance().setStyleSheet(self.darkTheme)
+        else:
+            QApplication.instance().setStyleSheet(self.lightTheme)
+
+    def toggleTheme(self):
+        self.currentTheme = "dark" if self.currentTheme == "light" else "light"
+        self.applyTheme(self.currentTheme)
+        self.buttonToggleTheme.setText("Dark Theme" if self.currentTheme == "light" else "Light Theme")
+        self.settings.setValue("theme", self.currentTheme)
+
 
 class SquareLabel(QLabel):
     def __init__(self, text=""):
