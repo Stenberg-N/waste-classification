@@ -1,6 +1,6 @@
 import sys, os
 from src.evaluate import predict_image
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton, QGridLayout, QMenuBar, QSpacerItem, QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton, QGridLayout, QMenuBar, QSpacerItem, QFileDialog, QMessageBox, QDialog
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QPixmap, QColor, QPainter, QBrush, QAction
 
@@ -36,28 +36,43 @@ class WasteClassifierApp(QMainWindow):
         self.barMenu = self.menuBar()
         self.barMenu.setStyleSheet("border: 1px solid white;")
         self.barMenu.setFixedHeight(30)
-        self.layout.addWidget(self.barMenu)
+
+        self.containerBarMenuOptionsLayout = QHBoxLayout()
+        self.containerBarMenuOptions = QWidget()
+        self.containerBarMenuOptionsLayout.setContentsMargins(0, 0, 0, 0)
+        self.containerBarMenuOptionsLayout.setSpacing(0)
+        self.containerBarMenuOptions.setLayout(self.containerBarMenuOptionsLayout)
 
         self.fileMenuBar = QMenuBar()
         self.fileMenu = self.fileMenuBar.addMenu("File")
-        self.barMenu.setCornerWidget(self.fileMenuBar, Qt.Corner.TopLeftCorner)
+
+        self.helpMenuBar = QMenuBar()
+        self.helpMenu = self.helpMenuBar.addMenu("Help")
+
+        self.containerBarMenuOptionsLayout.addWidget(self.fileMenuBar)
+        self.containerBarMenuOptionsLayout.addWidget(self.helpMenuBar)
+        self.barMenu.setCornerWidget(self.containerBarMenuOptions, Qt.Corner.TopLeftCorner)
 
         self.actionUpload = QAction("Upload image")
         self.actionClear = QAction("Clear image")
         self.actionClassify = QAction("Classify image")
         self.actionClassify.setEnabled(False)
         self.actionExit = QAction("Exit")
+        self.actionImageUploading = QAction("Image upload")
 
         self.actionUpload.triggered.connect(self.uploadImage)
         self.actionClear.triggered.connect(self.clearImage)
         self.actionClassify.triggered.connect(self.classifyImage)
         self.actionExit.triggered.connect(self.close)
+        self.actionImageUploading.triggered.connect(self.dialogImageUploading)
 
         self.fileMenu.addAction(self.actionUpload)
         self.fileMenu.addAction(self.actionClear)
         self.fileMenu.addAction(self.actionClassify)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.actionExit)
+
+        self.helpMenu.addAction(self.actionImageUploading)
 
         self.containerMainLayout = QVBoxLayout()
         self.containerMainLayout.setContentsMargins(80, 80, 80, 80)
@@ -209,6 +224,41 @@ class WasteClassifierApp(QMainWindow):
             self.actionClassify.setEnabled(True)
         else:
             self.actionClassify.setEnabled(False)
+
+    def dialogImageUploading(self):
+        self.dialog = QDialog()
+        self.dialog.setWindowTitle("Getting better results")
+        self.dialog.resize(600, 450)
+
+        self.header = QLabel("Tips to get better results from the model")
+        self.header.setStyleSheet("font-size: 24px; color: #fafafa; font-weight: bold;")
+        self.header.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+
+        self.label = QLabel("""
+            <p style='text-align: left;'>
+                If you are not getting the best prediction results, you can try a couple of things to fix that:
+            </p>
+            <div style='text-align: left; margin: 0 0 0 25px;'>
+                • Make sure your picture is not blurry<br>
+                • Try to take the picture from other angles<br>
+                • Keep the background simple, like a white paper<br>
+                • The model is only capable of identifying glass, metal, cardboard, paper, plastic and trash
+            </div>
+        """)
+        self.label.setStyleSheet("font-size: 16px; color: #fafafa;")
+        self.label.setWordWrap(True)
+
+        self.dialogLayout = QVBoxLayout()
+        self.dialogLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.dialogLayout.setContentsMargins(20, 20, 20, 20)
+        self.dialogLayout.setSpacing(0)
+        self.dialogLayout.addWidget(self.header)
+        self.dialogLayout.addSpacing(30)
+        self.dialogLayout.addWidget(self.label)
+        self.dialogLayout.addStretch()
+        self.dialog.setLayout(self.dialogLayout)
+
+        self.dialog.exec()
 
 class SquareLabel(QLabel):
     def __init__(self, text=""):
