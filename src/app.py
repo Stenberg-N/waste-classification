@@ -131,9 +131,9 @@ class WasteClassifierApp(QMainWindow):
         self.spacer = QSpacerItem(1, 1, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.containerImageButtonsLayout.addItem(self.spacer)
 
-        self.buttonUpload = QPushButton("Upload Image")
-        self.buttonClassify = QPushButton("Classify")
-        self.buttonClear = QPushButton("Clear")
+        self.buttonUpload = HoverButton("Upload Image")
+        self.buttonClassify = HoverButton("Classify")
+        self.buttonClear = HoverButton("Clear")
         self.buttonUpload.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.buttonClassify.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.buttonClear.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -277,6 +277,15 @@ class SquareLabel(QLabel):
 
     def sizeHint(self):
         return QSize(500, 500)
+
+class HoverButton(QPushButton):
+    def enterEvent(self, event):
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.unsetCursor()
+        super().leaveEvent(event)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
