@@ -1,7 +1,7 @@
 import sys, os
 from src.evaluate import predict_image
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton, QGridLayout, QMenuBar, QSpacerItem, QFileDialog, QMessageBox, QDialog
-from PyQt6.QtCore import Qt, QSize, QSettings
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton, QGridLayout, QMenuBar, QSpacerItem, QFileDialog, QMessageBox, QDialog, QMenu
+from PyQt6.QtCore import Qt, QSize, QSettings, pyqtSignal
 from PyQt6.QtGui import QPixmap, QColor, QPainter, QBrush, QAction
 
 class WasteClassifierApp(QMainWindow):
@@ -20,7 +20,7 @@ class WasteClassifierApp(QMainWindow):
         self.widgetCentral.setLayout(self.layout)
 
         self.barMenu = self.menuBar()
-        self.barMenu.setFixedHeight(30)
+        self.barMenu.setFixedHeight(40)
 
         self.containerBarMenuOptionsLayout = QHBoxLayout()
         self.containerBarMenuOptions = QWidget()
@@ -28,11 +28,13 @@ class WasteClassifierApp(QMainWindow):
         self.containerBarMenuOptionsLayout.setSpacing(0)
         self.containerBarMenuOptions.setLayout(self.containerBarMenuOptionsLayout)
 
-        self.fileMenuBar = QMenuBar()
-        self.fileMenu = self.fileMenuBar.addMenu("File")
+        self.fileMenuBar = CustomMenuBar()
+        self.fileMenu = CustomMenu("File")
+        self.fileMenuBar.addMenu(self.fileMenu)
 
-        self.helpMenuBar = QMenuBar()
-        self.helpMenu = self.helpMenuBar.addMenu("Help")
+        self.helpMenuBar = CustomMenuBar()
+        self.helpMenu = CustomMenu("Help")
+        self.helpMenuBar.addMenu(self.helpMenu)
 
         self.containerBarMenuOptionsLayout.addWidget(self.fileMenuBar)
         self.containerBarMenuOptionsLayout.addWidget(self.helpMenuBar)
@@ -75,10 +77,9 @@ class WasteClassifierApp(QMainWindow):
 
         self.containerImageButtonsLayout = QVBoxLayout()
         self.containerImageButtonsLayout.setContentsMargins(40, 40, 40, 40)
-        self.containerImageButtonsLayout.setSpacing(0)
+        self.containerImageButtonsLayout.setSpacing(10)
         self.containerImageButtons = QWidget()
         self.containerMainLayout.addWidget(self.containerImageButtons)
-        self.containerImageButtons.setStyleSheet("border: 1px solid white;")
         self.containerImageButtons.setMaximumWidth(1000)
         self.containerImageButtons.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.containerImageButtons.setLayout(self.containerImageButtonsLayout)
@@ -90,7 +91,15 @@ class WasteClassifierApp(QMainWindow):
         self.containerImage.setStyleSheet("border: 1px solid red;")
         self.containerImage.setLayout(self.containerImageLayout)
 
-        self.labelImage = SquareLabel("No image uploaded \n\n Drag and drop an image here \n\n")
+        self.labelImage = SquareLabel("""
+            <p style='text-align: center;'>
+                No image uploaded<br>
+                <br>Drag and drop an image here
+            </p>
+        """)
+
+        self.labelImage.clicked.connect(self.uploadImage)
+
         self.containerImageLayout.addWidget(self.labelImage)
         self.containerImageLayout.addStretch()
         self.labelImage.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -108,18 +117,15 @@ class WasteClassifierApp(QMainWindow):
 
         self.labelResults = QLabel("Prediction: ")
         self.containerFileResultsLayout.addWidget(self.labelResults)
-        self.labelResults.setStyleSheet("border: 1px solid green;")
-        self.labelResults.setMaximumHeight(30)
+        self.labelResults.setMaximumHeight(40)
 
         self.labelConfidence = QLabel("Confidence: ")
         self.containerFileResultsLayout.addWidget(self.labelConfidence)
-        self.labelConfidence.setStyleSheet("border: 1px solid green;")
-        self.labelConfidence.setMaximumHeight(30)
+        self.labelConfidence.setMaximumHeight(40)
 
         self.labelFile = QLabel("Uploaded image: ")
         self.containerFileResultsLayout.addWidget(self.labelFile)
-        self.labelFile.setStyleSheet("border: 1px solid green;")
-        self.labelFile.setMaximumHeight(30)
+        self.labelFile.setMaximumHeight(40)
 
         self.spacer = QSpacerItem(1, 1, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.containerImageButtonsLayout.addItem(self.spacer)
@@ -143,9 +149,8 @@ class WasteClassifierApp(QMainWindow):
 
         self.containerButtons = QWidget()
         self.containerImageButtonsLayout.addWidget(self.containerButtons)
-        self.containerButtons.setStyleSheet("border: 1px solid white;")
-        self.containerButtons.setMinimumHeight(150)
-        self.containerButtons.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.containerButtons.setMinimumHeight(180)
+        self.containerButtons.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.containerButtons.setLayout(self.containerButtonsLayout)
 
         self.buttonUpload.clicked.connect(self.uploadImage)
@@ -155,20 +160,51 @@ class WasteClassifierApp(QMainWindow):
 
         # STYLING
 
+        self.barMenu.setStyleSheet("""
+            color: #fafafa;
+            font-size: 16px;
+            border: none;
+            background-color: rgb(20, 20, 20);
+            padding: 0 20px 0 0;
+            text-align: center;
+        """)
+
+        self.containerMain.setStyleSheet("""
+            border-top: 2px solid #63e6ab;
+        """)
+
+        self.containerBarMenuOptions.setStyleSheet("""
+            color: #fafafa;
+            background-color: rgb(20, 20, 20);
+        """)
+
         self.lightTheme = """
             QLabel {
                 font-size: 16px;
                 color: black;
             }
             QWidget {
-                background-color: rgb(240, 240, 240);
+                background-color: rgb(208, 193, 180);
                 font-size: 16px;
             }
             QPushButton {
                 font-size: 16px;
                 color: black;
-                border-radius: 6px;
                 border: 1px solid white;
+            }
+            QMenu {
+                background-color: rgb(20, 20, 20);
+                color: #fafafa;
+            }
+            QMenu::item:selected {
+                background-color: rgb(40, 40, 40);
+            }
+            QMenu::item:disabled {
+                color: rgb(160, 160, 160);
+            }
+            QMenu:separator {
+                height: 1px;
+                background: #fafafa;
             }
         """
 
@@ -184,38 +220,190 @@ class WasteClassifierApp(QMainWindow):
             QPushButton {
                 font-size: 16px;
                 color: #fafafa;
-                border-radius: 6px;
                 border: 1px solid white;
+            }
+            QMenu {
+                background-color: rgb(20, 20, 20);
+                color: #fafafa;
+            }
+            QMenu::item:selected {
+                background-color: rgb(40, 40, 40);
+            }
+            QMenu::item:disabled {
+                color: rgb(160, 160, 160);
+            }
+            QMenu:separator {
+                height: 1px;
+                background: #fafafa;
             }
         """
 
-        self.buttonClassify.setStyleSheet("""
+        self.lightContainerImageButtons = """
+            background-color: rgb(215, 215, 215);
+            border-top: none;
+            border: 1px solid rgb(110, 110, 110);
+            border-radius: 10px;
+            color: black;
+        """
+
+        self.lightContainerImage = """
+            background-color: rgb(215, 215, 215);
+            border: 2px solid rgb(110, 110, 110);
+        """
+
+        self.lightContainerFileResults = """
+            border: 2px solid rgb(110, 110, 110);
+            border-radius: 0;
+        """
+
+        self.lightContainerButtons = """
+            border: 2px solid rgb(110, 110, 110);
+            border-radius: 0;
+        """
+
+        self.lightButtonUpload = """
+            QPushButton:hover {
+                background-color: #52bf8e;
+            }
             QPushButton {
-                background-color: #69ff46;
-                border: 3px solid #43a62d;
+                background-color: rgb(215, 215, 215);
+                border: 2px solid rgb(110, 110, 110);
+                border-radius: 6px;
+            }
+        """
+
+        self.lightButtonClear = """
+            QPushButton:hover {
+                background-color: rgba(255, 0, 0, 64);
+            }
+            QPushButton {
+                background-color: rgb(215, 215, 215);
+                border: 2px solid rgb(110, 110, 110);
+                border-radius: 6px;
+            }
+        """
+
+        self.lightButtonClassify = """
+            QPushButton {
+                background-color: #63e6ab;
+                border: 3px solid #47a67b;
+                border-radius: 6px;
                 color: black;
             }
             QPushButton:hover {
-                background-color: #52cc37;
+                background-color: #52bf8e;
             }
-        """)
+        """
 
-        self.barMenu.setStyleSheet("""
-            color: #fafafa;
-            font-size: 16px;
-            border: none;
-            background-color: rgb(20, 20, 20);
-            padding: 0 20px 0 0;
-        """)
+        self.lightLabelResults = """
+            background-color: rgb(215, 215, 215);
+            border: 2px solid rgb(110, 110, 110);
+            border-radius: 0;
+            padding: 5px 0 5px 5px;
+        """
 
-        self.containerMain.setStyleSheet("""
-            border-top: 2px solid #69ff46;
-        """)
+        self.lightLabelConfidence = """
+            background-color: rgb(215, 215, 215);
+            border: 2px solid rgb(110, 110, 110);
+            border-radius: 0;
+            padding: 5px 0 5px 5px;
+        """
 
-        self.containerBarMenuOptions.setStyleSheet("""
-            color: #fafafa;
-            background-color: rgb(20, 20, 20);
-        """)
+        self.lightLabelFile = """
+            background-color: rgb(215, 215, 215);
+            border: 2px solid rgb(110, 110, 110);
+            border-radius: 0;
+            padding: 5px 0 5px 5px;
+        """
+
+        self.lightLabelImage = """
+            border: 2px solid rgb(180, 180, 180);
+            border-radius: 10px;
+            border-style: dashed; 
+        """
+
+        self.darkContainerImageButtons = """
+            background-color: rgb(35, 35, 35);
+            border-top: none;
+            border: 1px solid rgb(72, 72, 72);
+            border-radius: 10px;
+        """
+
+        self.darkContainerImage = """
+            border: 2px solid rgb(128, 128, 128);
+        """
+
+        self.darkContainerFileResults = """
+            border: 2px solid rgb(128, 128, 128);
+            border-radius: 0;
+        """
+
+        self.darkContainerButtons = """
+            background-color: rgb(35, 35, 35);
+            border: 2px solid rgb(128, 128, 128);
+            border-radius: 0;
+        """
+
+        self.darkButtonUpload = """
+            QPushButton:hover {
+                background-color: #52bf8e;
+            }
+            QPushButton {
+                background-color: rgb(35, 35, 35);
+                border: 2px solid rgb(128, 128, 128);
+                border-radius: 6px;
+            }
+        """
+
+        self.darkButtonClear = """
+            QPushButton:hover {
+                background-color: rgba(255, 0, 0, 64);
+            }
+            QPushButton {
+                background-color: rgb(35, 35, 35);
+                border: 2px solid rgb(128, 128, 128);
+                border-radius: 6px;
+            }
+        """
+
+        self.darkButtonClassify = """
+            QPushButton {
+                background-color: #63e6ab;
+                border: 3px solid #47a67b;
+                border-radius: 6px;
+                color: black;
+            }
+            QPushButton:hover {
+                background-color: #52bf8e;
+            }
+        """
+
+        self.darkLabelResults = """
+            background-color: rgb(35, 35, 35);
+            border: 2px solid rgb(128, 128, 128);
+            border-radius: 0;
+            padding: 5px 0 5px 5px;
+        """
+
+        self.darkLabelConfidence = """
+            background-color: rgb(35, 35, 35);
+            border: 2px solid rgb(128, 128, 128);
+            border-radius: 0;
+            padding: 5px 0 5px 5px;
+        """
+
+        self.darkLabelFile = """
+            background-color: rgb(35, 35, 35);
+            border: 2px solid rgb(128, 128, 128);
+            border-radius: 0;
+            padding: 5px 0 5px 5px;
+        """
+
+        self.darkLabelImage = """
+            border: 2px solid rgb(60, 60, 60);
+            border-radius: 10px;
+            border-style: dashed;
+        """
 
         self.applyTheme(self.currentTheme)
 
@@ -273,7 +461,12 @@ class WasteClassifierApp(QMainWindow):
     def clearImage(self):
         self.image_path = None
         self.labelImage.clear()
-        self.labelImage.setText("No image uploaded \n\n Drag and drop an image here \n\n")
+        self.labelImage.setText("""
+            <p style='text-align: center;'>
+                No image uploaded<br>
+                <br>Drag and drop an image here
+            </p>
+        """)
         self.labelResults.setText("Prediction: ")
         self.labelConfidence.setText("Confidence: ")
         self.labelFile.setText("Uploaded image: ")
@@ -321,10 +514,33 @@ class WasteClassifierApp(QMainWindow):
         self.dialog.exec()
 
     def applyTheme(self, theme):
+        app = QApplication.instance()
         if theme == "dark":
-            QApplication.instance().setStyleSheet(self.darkTheme)
+            app.setStyleSheet(self.darkTheme)
+            self.containerImageButtons.setStyleSheet(self.darkContainerImageButtons)
+            self.containerButtons.setStyleSheet(self.darkContainerButtons)
+            self.labelResults.setStyleSheet(self.darkLabelResults)
+            self.labelConfidence.setStyleSheet(self.darkLabelConfidence)
+            self.labelFile.setStyleSheet(self.darkLabelFile)
+            self.buttonUpload.setStyleSheet(self.darkButtonUpload)
+            self.buttonClear.setStyleSheet(self.darkButtonClear)
+            self.buttonClassify.setStyleSheet(self.darkButtonClassify)
+            self.containerImage.setStyleSheet(self.darkContainerImage)
+            self.containerFileResults.setStyleSheet(self.darkContainerFileResults)
+            self.labelImage.setStyleSheet(self.darkLabelImage)
         else:
-            QApplication.instance().setStyleSheet(self.lightTheme)
+            app.setStyleSheet(self.lightTheme)
+            self.containerImageButtons.setStyleSheet(self.lightContainerImageButtons)
+            self.containerButtons.setStyleSheet(self.lightContainerButtons)
+            self.labelResults.setStyleSheet(self.lightLabelResults)
+            self.labelConfidence.setStyleSheet(self.lightLabelConfidence)
+            self.labelFile.setStyleSheet(self.lightLabelFile)
+            self.buttonUpload.setStyleSheet(self.lightButtonUpload)
+            self.buttonClear.setStyleSheet(self.lightButtonClear)
+            self.buttonClassify.setStyleSheet(self.lightButtonClassify)
+            self.containerImage.setStyleSheet(self.lightContainerImage)
+            self.containerFileResults.setStyleSheet(self.lightContainerFileResults)
+            self.labelImage.setStyleSheet(self.lightLabelImage)
 
     def toggleTheme(self):
         self.currentTheme = "dark" if self.currentTheme == "light" else "light"
@@ -332,12 +548,10 @@ class WasteClassifierApp(QMainWindow):
         self.buttonToggleTheme.setText("Dark Theme" if self.currentTheme == "light" else "Light Theme")
         self.settings.setValue("theme", self.currentTheme)
 
-
 class SquareLabel(QLabel):
     def __init__(self, text=""):
         super().__init__(text)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setStyleSheet("border: transparent;")
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.setMinimumSize(100, 100)
         self.setMaximumSize(500, 500)
@@ -350,6 +564,21 @@ class SquareLabel(QLabel):
 
     def sizeHint(self):
         return QSize(500, 500)
+    
+    clicked = pyqtSignal()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.clicked.emit()
+        super().mousePressEvent(event)
+
+    def enterEvent(self, event):
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.unsetCursor()
+        super().leaveEvent(event)
 
 class HoverButton(QPushButton):
     def enterEvent(self, event):
@@ -359,6 +588,24 @@ class HoverButton(QPushButton):
     def leaveEvent(self, event):
         self.unsetCursor()
         super().leaveEvent(event)
+
+class CustomMenuBar(QMenuBar):
+    def enterEvent(self, event):
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.unsetCursor()
+        super().leaveEvent(event)
+
+class CustomMenu(QMenu):
+    def mouseMoveEvent(self, event):
+        action = self.actionAt(event.pos())
+        if action and action.isEnabled():
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
+        else:
+            self.unsetCursor()
+        super().mouseMoveEvent(event)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
