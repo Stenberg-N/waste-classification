@@ -94,9 +94,11 @@ class WasteClassifierApp(QMainWindow):
         self.labelImage = SquareLabel("""
             <p style='text-align: center;'>
                 No image uploaded<br>
-                <br>Drag and drop an image here
+                <br>Drag and drop an image here,
+                <br>or click me to open the file explorer
             </p>
         """)
+        self.labelImage.setWordWrap(True)
 
         self.labelImage.clicked.connect(self.uploadImage)
 
@@ -165,8 +167,11 @@ class WasteClassifierApp(QMainWindow):
             font-size: 16px;
             border: none;
             background-color: rgb(20, 20, 20);
-            padding: 0 20px 0 0;
             text-align: center;
+        """)
+
+        self.buttonToggleTheme.setStyleSheet("""
+            margin: 8px 20px 8px 0;
         """)
 
         self.containerMain.setStyleSheet("""
@@ -190,11 +195,11 @@ class WasteClassifierApp(QMainWindow):
             QPushButton {
                 font-size: 16px;
                 color: black;
-                border: 1px solid white;
             }
             QMenu {
                 background-color: rgb(20, 20, 20);
                 color: #fafafa;
+                border: 1px solid #63e6ab;
             }
             QMenu::item:selected {
                 background-color: rgb(40, 40, 40);
@@ -203,7 +208,7 @@ class WasteClassifierApp(QMainWindow):
                 color: rgb(160, 160, 160);
             }
             QMenu:separator {
-                height: 1px;
+                height: 2px;
                 background: #fafafa;
             }
         """
@@ -220,11 +225,11 @@ class WasteClassifierApp(QMainWindow):
             QPushButton {
                 font-size: 16px;
                 color: #fafafa;
-                border: 1px solid white;
             }
             QMenu {
                 background-color: rgb(20, 20, 20);
                 color: #fafafa;
+                border: 1px solid #63e6ab;
             }
             QMenu::item:selected {
                 background-color: rgb(40, 40, 40);
@@ -233,7 +238,7 @@ class WasteClassifierApp(QMainWindow):
                 color: rgb(160, 160, 160);
             }
             QMenu:separator {
-                height: 1px;
+                height: 2px;
                 background: #fafafa;
             }
         """
@@ -501,6 +506,14 @@ class WasteClassifierApp(QMainWindow):
         self.label.setStyleSheet("font-size: 16px; color: #fafafa;")
         self.label.setWordWrap(True)
 
+        self.buttonClose = HoverButton("Close")
+        self.buttonClose.clicked.connect(self.dialog.close)
+        self.buttonClose.setStyleSheet("""
+            QPushButton:hover {
+                background-color: rgb(40, 40, 40);
+            }
+        """)
+
         self.dialogLayout = QVBoxLayout()
         self.dialogLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.dialogLayout.setContentsMargins(20, 20, 20, 20)
@@ -509,6 +522,7 @@ class WasteClassifierApp(QMainWindow):
         self.dialogLayout.addSpacing(30)
         self.dialogLayout.addWidget(self.label)
         self.dialogLayout.addStretch()
+        self.dialogLayout.addWidget(self.buttonClose)
         self.dialog.setLayout(self.dialogLayout)
 
         self.dialog.exec()
