@@ -25,7 +25,7 @@ if __name__ == '__main__':
     for param in model.get_classifier().parameters():
         param.requires_grad = True
 
-    optimizer = optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
+    optimizer = optim.AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001, weight_decay=0.0001)
 
     for epoch in range(stage1_epochs):
         model.train()
@@ -73,7 +73,8 @@ if __name__ == '__main__':
     for param in model.parameters():
         param.requires_grad = True
 
-    optimizer = optim.AdamW(model.parameters(), lr=0.00001)
+    optimizer = optim.AdamW(model.parameters(), lr=0.00001, weight_decay=0.0001)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=3)
 
     for epoch in range(stage2_epochs):
         model.train()
@@ -106,6 +107,7 @@ if __name__ == '__main__':
         average_validation_loss = validation_loss / len(validation_loader)
         average_train_loss = train_loss / len(train_loader)
         validation_accuracy = 100 * correct / total
+        scheduler.step(average_validation_loss)
 
         writer.add_scalar('Loss/train_stage2', average_train_loss, epoch)
         writer.add_scalar('Loss/validation_stage2', average_validation_loss, epoch)
