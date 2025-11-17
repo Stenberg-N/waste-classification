@@ -16,7 +16,7 @@ A waste classifier app using DenseNet201 to make predictions of users' uploaded 
 <img width="1390" height="1142" alt="heatmap" src="https://github.com/user-attachments/assets/f0f4652e-cf2c-498e-8814-bb67ffc0b5f8" />
 Test accuracy: 97.27% | Brief explanation how this works: when the X and Y axis match on the same label, the model got the prediction right.
 
-### Example predictions of unseen data
+### Example predictions on unseen data
 #### Cardboard
 <img width="716" height="1045" alt="cardboardexample" src="https://github.com/user-attachments/assets/d331b71d-1e69-4ed7-a6b2-735a35995f0e" />
 
