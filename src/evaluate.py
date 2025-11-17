@@ -44,7 +44,7 @@ def predict_image(image_path, checkpoint_path=(MODELS_DIR / 'stage2_best.pth'), 
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = get_model(model_name='densenet201', num_classes=6)
-    model.load_state_dict(torch.load(checkpoint_path, weights_only=True))
+    model.load_state_dict(torch.load(checkpoint_path, map_location=device, weights_only=True))
     model.to(device)
     model.eval()
 

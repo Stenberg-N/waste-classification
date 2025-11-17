@@ -1,4 +1,4 @@
-import torch, time
+import torch
 import torch.optim as optim
 from src.model import get_model
 from src.dataloader import split_dataset, get_dataloaders
@@ -33,7 +33,6 @@ if __name__ == '__main__':
         train_loss = 0.0
 
         for imgs, labels in train_loader:
-            start = time.time()
             imgs, labels = imgs.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(imgs)

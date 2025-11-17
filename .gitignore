@@ -7,3 +7,4 @@ dataset-original.zip
 *.png
 events.out.tfevents.*
 *.pth
+dist/
