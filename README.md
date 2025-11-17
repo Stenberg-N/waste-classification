@@ -53,14 +53,14 @@ Test accuracy: 97.27% | Brief explanation how this works: when the X and Y axis 
     Go to [garythung's trashnet repo on Hugging Face](https://huggingface.co/datasets/garythung/trashnet/blob/main/dataset-original.zip) and press download.
 5. Set up the dataset:  
     Place the zip in the raw data folder inside the root directory at **waste-classification --> data --> raw** (i.e. waste-classification\data\raw) and extract it there.
-6. Downloading a model or training it yourself:  
+6. Download a model or train it yourself:  
     If you want to tweak the parameters or add/remove parts and train the model yourself, you can train it by running this command from the root:<br><br>
     ```text
     python -m src.train
     ```
     If you want an already trained model, you can go [here](https://huggingface.co/Stenberg-N/waste-classification-model/tree/main) and download either of the models; stage2_best.pth is trained with MobileNetV4 Hybrid Medium (i.e. mobilenetv4_hybrid_medium.e500_r224_in1k). Note! The name of the model **needs** to be **stage2_best.pth**, so if you download the DenseNet201 model, remove the **DenseNet201_** from its name.  
 7. Place the model in the models directory:  
-    If you downloaded the trained model, you need to place it inside the models\ directory. Note! The name **must** be stage2_best.pth
+    If you downloaded a trained model, you need to place it inside the models\ directory. Note! The name **must** be stage2_best.pth
 8. Launch the app:<br><br>
     ```text
     python -m src.app
