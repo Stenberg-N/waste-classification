@@ -9,7 +9,7 @@ from configs.paths import MODELS_DIR
 
 def evaluate_test_set(checkpoint_path=(MODELS_DIR / 'stage2_best.pth')):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = get_model(model_name='mobilenetv4_hybrid_medium.e500_r224_in1k', num_classes=6, pretrained=False)
+    model = get_model(model_name='densenet201', num_classes=6, pretrained=False)
     model.load_state_dict(torch.load(checkpoint_path, weights_only=True))
     model.to(device)
     model.eval()
@@ -43,7 +43,7 @@ def predict_image(image_path, checkpoint_path=(MODELS_DIR / 'stage2_best.pth'), 
     classes = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = get_model(model_name='mobilenetv4_hybrid_medium.e500_r224_in1k', num_classes=6)
+    model = get_model(model_name='densenet201', num_classes=6)
     model.load_state_dict(torch.load(checkpoint_path, weights_only=True))
     model.to(device)
     model.eval()

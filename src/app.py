@@ -458,15 +458,9 @@ class WasteClassifierApp(QMainWindow):
 
     def classifyImage(self):
         if not self.image_path:
-            self.msg = QMessageBox(QMessageBox.Icon.Critical, "Error", "Please upload an image!")
-            self.msg.exec()
+            msg = QMessageBox(QMessageBox.Icon.Critical, "Error", "Please upload an image!", parent=self)
+            msg.exec()
             return
-
-        self.msg.setStyleSheet("""
-            QPushButton {
-                width: 20px;
-            }
-        """)
 
         predicted_class, confidence = predict_image(self.image_path)
         self.labelResults.setText(f"Prediction: {predicted_class}")

@@ -12,7 +12,7 @@ if __name__ == '__main__':
     stage2_epochs = 30
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    model = get_model(model_name='mobilenetv4_hybrid_medium.e500_r224_in1k', num_classes=6, pretrained=True).to(device)
+    model = get_model(model_name='densenet201', num_classes=6, pretrained=True).to(device)
 
     train_loader, validation_loader, _ = get_dataloaders()
     writer = SummaryWriter(LOGS_DIR)
